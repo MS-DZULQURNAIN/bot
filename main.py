@@ -1,4 +1,6 @@
 from pyrogram import Client, filters
+from database import *
+from database import add_topup, get_topup, add_coin, get_coin
 
 # Inisialisasi klien Pyrogram
 api_id = "29855436"
@@ -12,6 +14,7 @@ ADMIN_ID = 1814359323  # Ganti dengan ID pengguna admin yang sesuai
 
 # Simpan informasi top-up yang diminta oleh pengguna
 topup_requests = {}
+my_coin = {}
 
 # Handler untuk perintah /start
 @app.on_message(filters.command("start"))
