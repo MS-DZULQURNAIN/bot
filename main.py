@@ -13,6 +13,12 @@ ADMIN_ID = 1814359323  # Ganti dengan ID pengguna admin yang sesuai
 # Simpan informasi top-up yang diminta oleh pengguna
 topup_requests = {}
 
+# Handler untuk perintah /start
+@app.on_message(filters.command("start"))
+def start_command(client, message):
+    user_id = message.from_user.id
+    client.send_message(message.chat.id, f"Halo! Selamat datang di bot top-up. Untuk melakukan top-up, silakan gunakan perintah /request_topup.")
+
 # Handler untuk perintah /admin_topup
 @app.on_message(filters.command("admin_topup") & filters.user(ADMIN_ID))
 def admin_topup_command(client, message):
