@@ -168,10 +168,21 @@ async def topup_coin_command_handler(client: Client, message: Message):
 
 async def send_log_message(text, photo_file_id):
     log_group_id = -1001613490589  # Ganti dengan ID grup log Anda
-    # Mengirim pesan ke grup log dengan foto
-    requests.post(
-        f"https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={log_group_id}&caption={text}&photo={photo_file_id}"
-)
+
+    # Membentuk payload untuk mengirim pesan ke grup log dengan foto
+    payload = {
+        "chat_id": log_group_id,
+        "caption": text,
+        "photo": photo_file_id
+    }
+
+    # Mengirim permintaan POST dengan payload
+    response = requests.post(f"https://api.telegram.org/bot{bot_token}/sendPhoto", data=payload)
+
+    # Memeriksa status response
+    if response.status_code != 200:
+        print(f"Error sending log message: {response.content}")
+
 
 # Jalankan bot store
 print("AKTIF 🔥") 
