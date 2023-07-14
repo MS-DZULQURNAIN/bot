@@ -42,6 +42,14 @@ def request_topup_command(client, message):
 
     client.send_message(message.chat.id, "Permintaan top-up telah diterima. Tunggu hingga admin memproses.")
 
+# Handler untuk perintah /check_coin
+@app.on_message(filters.command("check_coin"))
+def check_coin_command(client, message):
+    user_id = message.from_user.id
+    coin_balance = my_coin.get(user_id, 0)
+    client.send_message(message.chat.id, f"Saldo my coin Anda: {coin_balance}")
+
+
 # Jalankan bot
 print("AKTIF🔥")
 app.run()
