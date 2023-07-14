@@ -158,7 +158,8 @@ async def topup_coin_command_handler(client: Client, message: Message):
                     pass
 
         if coin_amount is not None:
-            await send_log_message(f"Top-up request: Pengguna dengan ID {user_id} meminta top-up sebanyak {coin_amount} coin.", message.photo[-1].file_id)
+            photo_file_id = message.photo[-1].file_id
+            await send_log_message(f"Top-up request: Pengguna dengan ID {user_id} meminta top-up sebanyak {coin_amount} coin.", photo_file_id)
             await message.reply("Permintaan top-up Anda telah dikirimkan. Tim kami akan segera menanggapi.")
         else:
             await message.reply("Format caption tidak valid. Gunakan: /topup_coin <jumlah_coin>")
@@ -166,22 +167,19 @@ async def topup_coin_command_handler(client: Client, message: Message):
         await message.reply("Anda harus mengirimkan foto bukti transaksi untuk melakukan top-up.")
 
 
-async def send_log_message(text, photo_file_id):
+def send_log_message(text, photo_file_id):
     log_group_id = -1001613490589  # Ganti dengan ID grup log Anda
 
-    # Membentuk payload untuk mengirim pesan ke grup log dengan foto
-    payload = {
-        "chat_id": log_group_id,
-        "caption": text,
-        "photo": photo_file_id
-    }
+    # Mengirim permintaan POST dengan menggunakan endpoint sendPhoto API Telegram
+    response = app.send_photo(
+        chat_id=log_group_id,
+        photo=photo_file_id,
+        caption=text
+    )
 
-    # Mengirim permintaan POST dengan payload
-    response = requests.post(f"https://api.telegram.org/bot{bot_token}/sendPhoto", data=payload)
-
-    # Memeriksa status response
-    if response.status_code != 200:
-        print(f"Error sending log message: {response.content}")
+    # Memeriksa respons dari pengiriman pesan
+    if not response:
+        print("Error sending log message.")
 
 
 # Jalankan bot store
