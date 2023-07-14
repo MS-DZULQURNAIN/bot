@@ -74,13 +74,14 @@ users_collection = db["users"]
 # Inisialisasi koneksi ke Telegram menggunakan Pyrogram
 api_id = 29855436  # Ganti dengan API ID Anda
 api_hash = "c01b59b1d686c55d60a92c171e2b19fe"  # Ganti dengan API Hash Anda
+bot_token = "6381483867:AAEAT3PbP7h5cejrgyb8e6wKP3gO0KshmvQ"
 
-app = Client("bot_store_bot", api_id, api_hash)
+app = Client("bot_store_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
 
 # Command /start untuk menyambut pengguna
 @app.on_message(filters.command("start", prefixes="/"))
-def start_command_handler(client: Client, message: Message):
+async def start_command_handler(client: Client, message: Message):
     user_id = message.from_user.id
     username = message.from_user.username
 
@@ -94,7 +95,7 @@ def start_command_handler(client: Client, message: Message):
 
 # Command /my_coin untuk pengguna
 @app.on_message(filters.command("my_coin", prefixes="/"))
-def my_coin_command_handler(client: Client, message: Message):
+async def my_coin_command_handler(client: Client, message: Message):
     user_id = message.from_user.id
 
     # Cek apakah pengguna sudah terdaftar di database
@@ -108,7 +109,7 @@ def my_coin_command_handler(client: Client, message: Message):
 
 # Command /transfer_coin hanya untuk admin
 @app.on_message(filters.command("transfer_coin", prefixes="/"))
-def transfer_coin_command_handler(client: Client, message: Message):
+async def transfer_coin_command_handler(client: Client, message: Message):
     admin_id = 1814359323  # Ganti dengan ID admin Anda
 
     if message.from_user.id == admin_id:
@@ -141,7 +142,7 @@ def transfer_coin_command_handler(client: Client, message: Message):
 
 # Command /topup_coin untuk melakukan top-up coin
 @app.on_message(filters.command("topup_coin", prefixes="/"))
-def topup_coin_command_handler(client: Client, message: Message):
+async def topup_coin_command_handler(client: Client, message: Message):
     user_id = message.from_user.id
 
     # Cek apakah ada foto dalam pesan
@@ -157,7 +158,7 @@ def topup_coin_command_handler(client: Client, message: Message):
                     pass
 
         if coin_amount is not None:
-            await client.send_log_message(f"Top-up request: Pengguna dengan ID {user_id} meminta top-up sebanyak {coin_amount} coin.")
+            await send_log_message(f"Top-up request: Pengguna dengan ID {user_id} meminta top-up sebanyak {coin_amount} coin.", message.photo[-1].file_id)
             await message.reply("Permintaan top-up Anda telah dikirimkan. Tim kami akan segera menanggapi.")
         else:
             await message.reply("Format caption tidak valid. Gunakan: /topup_coin <jumlah_coin>")
@@ -165,11 +166,12 @@ def topup_coin_command_handler(client: Client, message: Message):
         await message.reply("Anda harus mengirimkan foto bukti transaksi untuk melakukan top-up.")
 
 
-def send_log_message(text):
-    log_group_id = -1001877501169  # Ganti dengan ID grup log Anda
-    # Mengirim pesan ke grup log
-    requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={log_group_id}&text={text}")
-
+async def send_log_message(text, photo_file_id):
+    log_group_id = -1001613490589  # Ganti dengan ID grup log Anda
+    # Mengirim pesan ke grup log dengan foto
+    requests.post(
+        f"https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={log_group_id}&caption={text}&photo={photo_file_id}"
+)
 
 # Jalankan bot store
 print("AKTIF 🔥") 
