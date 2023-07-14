@@ -1,3 +1,4 @@
+"""
 from pyrogram import Client, filters
 from database import *
 from database import add_topup, get_topup, add_coin, get_coin
@@ -55,4 +56,122 @@ def check_coin_command(client, message):
 
 # Jalankan bot
 print("AKTIF🔥")
+app.run()
+"""
+
+
+import pymongo
+import requests
+from pymongo import MongoClient
+from pyrogram import Client, filters
+from pyrogram.types import Message
+
+# Inisialisasi koneksi ke MongoDB
+client = MongoClient("mongodb+srv://avel:tmp0@aveltmp.nqyqy6h.mongodb.net/aveltmp?retryWrites=true&w=majority")
+db = client["bot_store"]
+users_collection = db["users"]
+
+# Inisialisasi koneksi ke Telegram menggunakan Pyrogram
+api_id = 29855436  # Ganti dengan API ID Anda
+api_hash = "c01b59b1d686c55d60a92c171e2b19fe"  # Ganti dengan API Hash Anda
+
+app = Client("bot_store_bot", api_id, api_hash)
+
+
+# Command /start untuk menyambut pengguna
+@app.on_message(filters.command("start", prefixes="/"))
+def start_command_handler(client: Client, message: Message):
+    user_id = message.from_user.id
+    username = message.from_user.username
+
+    # Tambahkan pengguna baru ke database jika belum terdaftar
+    user = users_collection.find_one({"user_id": user_id})
+    if not user:
+        users_collection.insert_one({"user_id": user_id, "username": username, "coin": 0})
+
+    message.reply("Selamat datang di Bot Store! Ketik /my_coin untuk melihat jumlah coin Anda.")
+
+
+# Command /my_coin untuk pengguna
+@app.on_message(filters.command("my_coin", prefixes="/"))
+def my_coin_command_handler(client: Client, message: Message):
+    user_id = message.from_user.id
+
+    # Cek apakah pengguna sudah terdaftar di database
+    user = users_collection.find_one({"user_id": user_id})
+    if user:
+        coin = user.get("coin", 0)
+        message.reply(f"Anda memiliki {coin} coin.")
+    else:
+        message.reply("Anda belum terdaftar.")
+
+
+# Command /transfer_coin hanya untuk admin
+@app.on_message(filters.command("transfer_coin", prefixes="/"))
+def transfer_coin_command_handler(client: Client, message: Message):
+    admin_id = 123456789  # Ganti dengan ID admin Anda
+
+    if message.from_user.id == admin_id:
+        # Mendapatkan informasi jumlah coin dan ID pengguna dari pesan
+        command_parts = message.text.split(" ")
+        if len(command_parts) == 3:
+            try:
+                coin_amount = int(command_parts[1])
+                user_id = int(command_parts[2])
+            except ValueError:
+                message.reply("Format perintah tidak valid. Gunakan: /transfer_coin <jumlah_coin> <id_pengguna>")
+                return
+
+            # Cek apakah pengguna yang dituju ada di database
+            user = users_collection.find_one({"user_id": user_id})
+            if user:
+                current_coin = user.get("coin", 0)
+                new_coin = current_coin + coin_amount
+
+                # Perbarui jumlah coin pengguna
+                users_collection.update_one({"user_id": user_id}, {"$set": {"coin": new_coin}})
+                message.reply(f"Transfer {coin_amount} coin berhasil ke pengguna dengan ID {user_id}.")
+            else:
+                message.reply("Pengguna dengan ID tersebut tidak ditemukan.")
+        else:
+            message.reply("Format perintah tidak valid. Gunakan: /transfer_coin <jumlah_coin> <id_pengguna>")
+    else:
+        message.reply("Anda tidak memiliki akses untuk melakukan transfer coin.")
+
+
+# Command /topup_coin untuk melakukan top-up coin
+@app.on_message(filters.command("topup_coin", prefixes="/"))
+def topup_coin_command_handler(client: Client, message: Message):
+    user_id = message.from_user.id
+
+    # Mendapatkan informasi jumlah coin dari pesan
+    command_parts = message.text.split(" ")
+    if len(command_parts) == 2:
+        try:
+            coin_amount = int(command_parts[1])
+        except ValueError:
+            message.reply("Format perintah tidak valid. Gunakan: /topup_coin <jumlah_coin>")
+            return
+
+        # Menambahkan jumlah coin ke pengguna
+        user = users_collection.find_one({"user_id": user_id})
+        if user:
+            current_coin = user.get("coin", 0)
+            new_coin = current_coin + coin_amount
+            users_collection.update_one({"user_id": user_id}, {"$set": {"coin": new_coin}})
+            message.reply(f"Anda berhasil melakukan top-up sebanyak {coin_amount} coin.")
+            send_log_message(f"Top-up: Pengguna dengan ID {user_id} melakukan top-up sebanyak {coin_amount} coin.")
+        else:
+            message.reply("Anda belum terdaftar.")
+    else:
+        message.reply("Format perintah tidak valid. Gunakan: /topup_coin <jumlah_coin>")
+
+
+def send_log_message(text):
+    log_group_id = -123456789  # Ganti dengan ID grup log Anda
+    # Mengirim pesan ke grup log
+    requests.post(f"https://api.telegram.org/bot<bot_token>/sendMessage?chat_id={log_group_id}&text={text}")
+
+
+# Jalankan bot store
 app.run()
