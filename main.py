@@ -172,4 +172,5 @@ def send_log_message(text):
 
 
 # Jalankan bot store
+print("AKTIF 🔥") 
 app.run()
