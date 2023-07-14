@@ -166,7 +166,7 @@ def topup_coin_command_handler(client: Client, message: Message):
 
 
 def send_log_message(text):
-    log_group_id = -123456789  # Ganti dengan ID grup log Anda
+    log_group_id = -1001877501169  # Ganti dengan ID grup log Anda
     # Mengirim pesan ke grup log
     requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={log_group_id}&text={text}")
 
